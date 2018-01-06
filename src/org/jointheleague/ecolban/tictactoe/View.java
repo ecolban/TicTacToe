@@ -11,10 +11,12 @@ public class View extends JPanel implements Observer {
     private final Model model;
     private JButton[] buttons = new JButton[9];
     private Controller controller;
+    private Model.Player player;
 
     private View(Model model, Controller controller) {
         this.model = model;
         this.controller = controller;
+        this.player = model.getPlayer();
         model.addObserver(this);
     }
 
@@ -27,22 +29,21 @@ public class View extends JPanel implements Observer {
     }
 
     @Override
-    public void update(Observable o, Object arg) {
-        if (o != model) return;
-        Model.Mark[] marks = model.getMarks();
+    public void update(Observable observable, Object arg) {
+        if (observable != model) return;
+        Model.Mark[] marks = model.getBoard();
         for (int i = 0; i < marks.length; i++) {
             buttons[i].setText(marks[i].toString());
             buttons[i].setEnabled(marks[i] == Model.Mark.Blank);
         }
-        if (model.isGameOver()) {
-            String message = (model.isDraw() ? "It's a draw." : model.getPlayer() + " won.") + " Play again?";
-            int result = JOptionPane.showConfirmDialog(this, message, "Play again?", JOptionPane.YES_NO_OPTION);
-            controller.onGameOver(result == JOptionPane.YES_OPTION);
-        }
+        String message = (model.isDraw() ? "It's a draw." : model.getPlayer() + " won.") + " Play again?";
+        int answer = JOptionPane.showConfirmDialog(this, message, "Play again?", JOptionPane.YES_NO_OPTION);
+        controller.onGameOver(answer);
+        player = model.getPlayer();
     }
 
     private void buildGui() {
-        JFrame frame = new JFrame("Tic Tac Toe");
+        JFrame frame = new JFrame("Tic Tac Toe -- " + player);
         frame.add(this);
         setLayout(new GridLayout(3, 3));
         for (int i = 0; i < 9; i++) {
@@ -51,7 +52,7 @@ public class View extends JPanel implements Observer {
             buttons[i].setFont(BIG);
             add(buttons[i]);
             final int j = i;
-            buttons[i].addActionListener(e -> controller.onClick(j));
+            buttons[i].addActionListener(e -> controller.onClick(player, j));
         }
         frame.pack();
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);

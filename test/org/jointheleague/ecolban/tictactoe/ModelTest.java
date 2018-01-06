@@ -19,7 +19,7 @@ public class ModelTest {
     @Test
     public void testConstructor() {
 
-        Model.Mark[] marks = model.getMarks();
+        Model.Mark[] marks = model.getBoard();
         for (Model.Mark mark : marks) {
             assertEquals(Model.Mark.Blank, mark);
         }
@@ -27,20 +27,27 @@ public class ModelTest {
 
     @Test
     public void testMark() {
-        assertEquals(Model.Mark.X, model.getPlayer());
+        assertEquals(Model.Player.X, model.getPlayer());
         try {
-            model.mark(9);
-            fail("mark(9) is not possible");
+            model.play(Model.Player.X, 9);
+            fail("play(X, 9) is not possible");
         } catch (IllegalArgumentException e) {
             assertEquals("pos must be between 0 (inclusive) and 9 (exclusive).", e.getMessage());
         }
-        model.mark(0);
-        assertEquals(Model.Mark.X, model.getMarks()[0]);
-        assertEquals(Model.Mark.O, model.getPlayer());
+
         try {
-            model.mark(0);
-            fail("Two times mark(0) is not possible");
-        } catch (IllegalArgumentException e) {
+            model.play(Model.Player.O, 4);
+            fail("It's not O's turn");
+        } catch (IllegalStateException e) {
+            assertEquals("It's not O's turn.", e.getMessage());
+        }
+        model.play(Model.Player.X, 0);
+        assertEquals(Model.Mark.X, model.getBoard()[0]);
+        assertEquals(Model.Player.O, model.getPlayer());
+        try {
+            model.play(Model.Player.O, 0);
+            fail("Two times play(0) is not possible");
+        } catch (IllegalStateException e) {
             assertEquals("pos must be blank.", e.getMessage());
         }
         assertFalse(model.isGameOver());
@@ -49,23 +56,25 @@ public class ModelTest {
 
     @Test
     public void testReset() {
-        model.mark(0);
+        model.play(Model.Player.X, 0);
         assertNotEquals(Model.Mark.X, model.getPlayer());
-        model.reset();
-        for (Model.Mark mark : model.getMarks()) {
+        model.reset(Model.Player.X);
+        for (Model.Mark mark : model.getBoard()) {
             assertEquals(Model.Mark.Blank, mark);
         }
-        assertEquals(Model.Mark.X, model.getPlayer());
+        assertEquals(Model.Player.X, model.getPlayer());
+        model.reset(Model.Player.O);
+        assertEquals(Model.Player.O, model.getPlayer());
     }
 
     @Test
     public void testObserversAreNotified() {
         model.addObserver((o, arg) -> observersNotified = true);
         observersNotified = false;
-        model.mark(0);
+        model.play(model.getPlayer(), 0);
         assertTrue(observersNotified);
         observersNotified = false;
-        model.reset();
+        model.reset(Model.Player.X);
         assertTrue(observersNotified);
     }
 }

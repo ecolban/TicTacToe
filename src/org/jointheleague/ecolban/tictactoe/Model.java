@@ -4,43 +4,58 @@ import java.util.Observable;
 
 public class Model extends Observable {
 
-    private Mark[] marks = new Mark[9];
-    private Mark player = Mark.X;
-    private boolean isGameOver = false;
-    private boolean isDraw = false;
-    private int numMoves = 0;
+    private Mark[] board = new Mark[9];
+    private Player player;
+    private boolean isGameOver;
+    private boolean isDraw;
+    private int numMoves;
 
     Model() {
-        for (int i = 0; i < marks.length; i++) {
-            marks[i] = Mark.Blank;
-        }
+        reset(Player.X);
     }
 
-    public Mark[] getMarks() {
-        return marks.clone();
+    public Mark[] getBoard() {
+        return board.clone();
     }
 
-    public Mark getPlayer() {
+    public Player getPlayer() {
         return player;
     }
 
+    /**
+     * @return true if and only if the game is over
+     */
     public boolean isGameOver() {
         return isGameOver;
     }
 
+    /**
+     * @return true iff it's a draw
+     */
     public boolean isDraw() {
 
         return isDraw;
     }
 
-    public void mark(int pos) {
-        if (pos < 0 || pos >= marks.length) {
+    /**
+     * Adds a mark on the board for player at pos
+     *
+     * @param player the player
+     * @param pos the position on the board where player's mark is to be put.
+     * @throws IllegalStateException if it is not player's turn or pos is already marked with X or O
+     * @throws IllegalArgumentException if pos is outside the permitted range
+     */
+    public void play(Player player, int pos) throws IllegalStateException, IllegalArgumentException {
+        if (pos < 0 || pos >= board.length) {
             throw new IllegalArgumentException("pos must be between 0 (inclusive) and 9 (exclusive).");
         }
-        if (marks[pos] != Mark.Blank) {
-            throw new IllegalArgumentException("pos must be blank.");
+        if (this.player != player) {
+            throw new IllegalStateException("It's not " + player + "'s turn.");
         }
-        marks[pos] = player;
+        if (board[pos] != Mark.Blank) {
+            throw new IllegalStateException("pos must be blank.");
+        }
+        board[pos] = this.player.mark;
         numMoves++;
         checkGameOver();
         if (!isGameOver) switchPlayer();
@@ -49,31 +64,36 @@ public class Model extends Observable {
     }
 
     private void checkGameOver() {
-        boolean isWin = marks[0] == player && marks[1] == player && marks[2] == player
-                || marks[3] == player && marks[4] == player && marks[5] == player
-                || marks[6] == player && marks[7] == player && marks[8] == player
-                || marks[0] == player && marks[3] == player && marks[6] == player
-                || marks[1] == player && marks[4] == player && marks[7] == player
-                || marks[2] == player && marks[5] == player && marks[8] == player
-                || marks[0] == player && marks[4] == player && marks[8] == player
-                || marks[2] == player && marks[4] == player && marks[6] == player;
+        Mark m = player.mark;
+        boolean isWin = board[0] == m && board[1] == m && board[2] == m
+                || board[3] == m && board[4] == m && board[5] == m
+                || board[6] == m && board[7] == m && board[8] == m
+                || board[0] == m && board[3] == m && board[6] == m
+                || board[1] == m && board[4] == m && board[7] == m
+                || board[2] == m && board[5] == m && board[8] == m
+                || board[0] == m && board[4] == m && board[8] == m
+                || board[2] == m && board[4] == m && board[6] == m;
 
-        isDraw = !isWin && numMoves == marks.length;
+        isDraw = !isWin && numMoves == board.length;
         isGameOver = isWin || isDraw;
     }
 
     private void switchPlayer() {
-        player = player == Mark.X ? Mark.O : Mark.X;
+        player = player == Player.X ? Player.O : Player.X;
     }
 
-    public void reset() {
+    /**
+     * Reset the game to the initial state. After this, it's startPlayer's turn.
+     * @param startPlayer the player to begin the game.
+     */
+    public void reset(Player startPlayer) {
         numMoves = 0;
-        for (int i = 0; i < marks.length; i++) {
-            marks[i] = Mark.Blank;
+        for (int i = 0; i < board.length; i++) {
+            board[i] = Mark.Blank;
         }
         isGameOver = false;
         isDraw = false;
-        player = Mark.X;
+        player = startPlayer;
         setChanged();
         notifyObservers();
     }
@@ -94,5 +114,15 @@ public class Model extends Observable {
         }
     }
 
+    public enum Player {
+
+        O(Mark.O), X(Mark.X);
+
+        private final Mark mark;
+
+        Player(Mark mark) {
+            this.mark = mark;
+        }
+    }
 }
 

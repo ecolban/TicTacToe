@@ -33,7 +33,6 @@ public class Model extends Observable {
      * @return true iff it's a draw
      */
     public boolean isDraw() {
-
         return isDraw;
     }
 
@@ -111,6 +110,17 @@ public class Model extends Observable {
         @Override
         public String toString() {
             return string;
+        }
+
+        public static Mark fromString(String string) {
+            switch (string) {
+                case "X":
+                    return X;
+                case "O":
+                    return O;
+                default:
+                    return Blank;
+            }
         }
     }
 

@@ -7,13 +7,13 @@ import java.util.Observer;
 
 public class View extends JPanel implements Observer {
 
-    private static final Font BIG = new Font("Helvetica", Font.PLAIN, 144);
+    private static final Font BIG = new Font(Font.SANS_SERIF, Font.PLAIN, 36);
     private final Model model;
+    private final Controller controller;
     private JButton[] buttons = new JButton[9];
-    private Controller controller;
     private Model.Player player;
 
-    private View(Model model, Controller controller) {
+    View(Model model, Controller controller) {
         this.model = model;
         this.controller = controller;
         this.player = model.getPlayer();
@@ -32,23 +32,25 @@ public class View extends JPanel implements Observer {
     public void update(Observable observable, Object arg) {
         if (observable != model) return;
         Model.Mark[] marks = model.getBoard();
+        player = model.getPlayer();
         for (int i = 0; i < marks.length; i++) {
             buttons[i].setText(marks[i].toString());
             buttons[i].setEnabled(marks[i] == Model.Mark.Blank);
         }
-        String message = (model.isDraw() ? "It's a draw." : model.getPlayer() + " won.") + " Play again?";
-        int answer = JOptionPane.showConfirmDialog(this, message, "Play again?", JOptionPane.YES_NO_OPTION);
-        controller.onGameOver(answer);
-        player = model.getPlayer();
+        if (model.isGameOver()) {
+            String message = (model.isDraw() ? "It's a draw." : player + " won.") + " Play again?";
+            int answer = JOptionPane.showConfirmDialog(this, message, "Play again?", JOptionPane.YES_NO_OPTION);
+            controller.onGameOver(answer);
+        }
     }
 
-    private void buildGui() {
-        JFrame frame = new JFrame("Tic Tac Toe -- " + player);
+    void buildGui() {
+        JFrame frame = new JFrame("Tic-Tac-Toe");
         frame.add(this);
         setLayout(new GridLayout(3, 3));
         for (int i = 0; i < 9; i++) {
             buttons[i] = new JButton();
-            buttons[i].setPreferredSize(new Dimension(200, 200));
+            buttons[i].setPreferredSize(new Dimension(70, 50));
             buttons[i].setFont(BIG);
             add(buttons[i]);
             final int j = i;
